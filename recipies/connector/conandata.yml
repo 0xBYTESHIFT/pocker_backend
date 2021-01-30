@@ -1,0 +1,3 @@
+sources:
+  "0.60":
+    url: "https://github.com/matthijs/sqlpp11-connector-postgresql"

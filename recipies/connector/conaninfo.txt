@@ -1,0 +1,32 @@
+[settings]
+    arch=x86_64
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=11
+    os=Linux
+
+[requires]
+    libpq/13.1
+    sqlpp11/0.60
+
+[options]
+    SHARED=true
+    CODE_COVERAGE=false
+    ENABLE_TESTS=true
+
+[full_settings]
+    arch=x86_64
+    build_type=Release
+    compiler=clang
+    compiler.libcxx=libstdc++11
+    compiler.version=11
+    os=Linux
+
+[full_requires]
+
+[full_options]
+
+[recipe_hash]
+
+[env]
