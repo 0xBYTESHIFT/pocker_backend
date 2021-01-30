@@ -7,8 +7,10 @@ public:
     enum { header_length = 4 };
     enum { max_body_length = 1024 };
 
-    message()
-        : body_length_(0) {
+    message() {}
+
+    message(const std::string& str) {
+        (*this) = str;
     }
 
     const char* data() const {
@@ -58,7 +60,15 @@ public:
         std::memcpy(data_, header, header_length);
     }
 
+    auto operator=(const std::string& str) -> message& {
+        const auto len = str.length();
+        body_length(len);
+        encode_header();
+        std::memcpy(data_ + header_length, str.data(), len);
+        return *this;
+    }
+
 private:
     char data_[header_length + max_body_length];
-    std::size_t body_length_;
+    std::size_t body_length_ = 0;
 };

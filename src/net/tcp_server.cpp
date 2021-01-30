@@ -1,6 +1,7 @@
 #include "net/tcp_server.h"
 #include "components/log.hpp"
 #include <boost/bind.hpp>
+#include "api.h"
 
 tcp_server::tcp_server(io_context_t& io_context, size_t port)
     : io_context_(io_context)
@@ -22,9 +23,13 @@ void tcp_server::start_accept() {
 void tcp_server::handle_accept(pointer_t new_connection, const ec_t& error) {
     auto lgr = get_logger();
     auto prefix = "tcp_server::handle_accept";
+    api::connect_response resp;
+    resp.code = 0; //ok;
+    message msg = resp.to_json();
 
     if (!error) {
         lgr.debug("{} new connection accepted", prefix);
+        new_connection->deliver(msg);
         handler_->add(new_connection);
     } else {
         lgr.error("{} error:{}", prefix, error.message());
