@@ -78,7 +78,7 @@ find_package(PostgreSQL REQUIRED)'''
         if self.options.SHARED:
             self.cpp_info.libs = ["sqlpp11-connector-postgresql-dynamic"]
         else:
-            self.cpp_info.libs = ["sqlpp11-connector-postgresql-dynamic"]
+            self.cpp_info.libs = ["sqlpp11-connector-postgresql"]
 
         self.cpp_info.libdirs = ["lib"]
         self.cpp_info.includedirs = ["include"]
