@@ -2,6 +2,7 @@
 #include "components/property.hpp"
 #include "rapidjson/prettywriter.h"
 #include <string>
+#include <codecvt>
 
 namespace api {
 
@@ -45,6 +46,12 @@ namespace api {
         w.String(str.c_str(), mes_size);
     }
 
+    template<class Writer>
+    void write_str(const std::wstring& str, Writer& w) {
+        auto mes_size = static_cast<rapidjson::SizeType>(str.length()*sizeof(wchar_t));
+        w.String(reinterpret_cast<const char*>(str.c_str()), mes_size);
+    }
+
     struct connect_response {
         const prop_val<std::string> type{"type", "connect_response"};
         prop_val<size_t> code{"code", 0};
@@ -55,8 +62,9 @@ namespace api {
 
     struct register_request {
         const prop_val<std::string> type{"type", "register_request"};
-        prop_val<std::string> name = {"name", ""};
-        property<std::string> pass_hash = "";
+        prop_val<std::wstring> first_name = {"first_name", L""};
+        prop_val<std::wstring> last_name = {"last_name", L""};
+        prop_val<std::string> pass_hash = {"pass_hash", ""};
 
         void from_json(const std::string& json);
         auto to_json() const -> std::string;

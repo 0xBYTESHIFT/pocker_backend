@@ -1,6 +1,7 @@
 #pragma once
 #include <cstring>
 #include <string>
+#include <codecvt>
 
 class message {
 public:
@@ -10,6 +11,10 @@ public:
     message() {}
 
     message(const std::string& str) {
+        (*this) = str;
+    }
+
+    message(const std::wstring& str) {
         (*this) = str;
     }
 
@@ -62,6 +67,14 @@ public:
 
     auto operator=(const std::string& str) -> message& {
         const auto len = str.length();
+        body_length(len);
+        encode_header();
+        std::memcpy(data_ + header_length, str.data(), len);
+        return *this;
+    }
+
+    auto operator=(const std::wstring& str) -> message& {
+        const auto len = str.length()*sizeof(wchar_t);
         body_length(len);
         encode_header();
         std::memcpy(data_ + header_length, str.data(), len);

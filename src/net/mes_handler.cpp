@@ -11,8 +11,10 @@ void mes_handler::del(tcp_connection_ptr conn) {
     participants_.erase(conn);
 }
 
-void mes_handler::broadcast(const message& msg) {
+void mes_handler::broadcast(const message& msg, tcp_connection_ptr sender) {
     for (auto participant : participants_) {
-        participant->deliver(msg);
+        if (participant != sender) {
+            participant->deliver(msg);
+        }
     }
 }
