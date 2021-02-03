@@ -9,6 +9,7 @@
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
 #include <iostream>
+#include <deque>
 
 using boost::asio::ip::tcp;
 

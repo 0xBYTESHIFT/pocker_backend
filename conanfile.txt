@@ -5,8 +5,8 @@ libcurl/7.73.0
 spdlog/1.8.2
 boost/1.75.0
 rapidjson/cci.20200410
-sqlpp11/0.60
-sqlpp11-connector-postgres/0.60@local/stable
+# sqlpp11/0.60
+# sqlpp11-connector-postgres/0.60@local/stable
 
 [generators]
 cmake

@@ -6,7 +6,6 @@
 #include <deque>
 #include <iostream>
 #include <string>
-#include <sqlpp11/sqlpp11.h>
 
 void my_signal_handler(int signum) {
     ::signal(signum, SIG_DFL);
