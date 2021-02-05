@@ -14,7 +14,7 @@ public:
 
     void add(tcp_connection_ptr conn);
     void del(tcp_connection_ptr conn);
-    void broadcast(const message& msg, tcp_connection_ptr sender = nullptr);
+    void handle(const message& msg, tcp_connection_ptr sender = nullptr);
 
 private:
     std::set<tcp_connection_ptr> participants_;

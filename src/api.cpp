@@ -1,8 +1,8 @@
 #include "include/api.h"
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
-#include <locale>
 #include <codecvt>
+#include <locale>
 
 using namespace api;
 
@@ -32,18 +32,24 @@ auto connect_response::to_json() const -> std::string {
 }
 
 void register_request::from_json(const std::string& json) {
-    rapidjson::Document d;
-    d.Parse(json.c_str());
-    rapidjson::Value val;
+    class json j = json;
+    this->from_json(j);
+}
 
-    val = d[this->first_name().name().c_str()];
-    this->first_name() = std::wstring_convert<std::codecvt_utf16<wchar_t>>().from_bytes(val.GetString());
+#include <iostream>
+void register_request::from_json(const json& j) {
+    {
+        auto c_str = j.value_as<std::string>(this->first_name().name());
+        this->first_name() = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(c_str);
+    }
 
-    val = d[this->last_name().name().c_str()];
-    this->last_name() = std::wstring_convert<std::codecvt_utf16<wchar_t>>().from_bytes(val.GetString());
+    {
+        auto c_str = j.value_as<std::string>(this->last_name().name());
+        this->last_name() = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(c_str);
+    }
 
-    val = d[this->pass_hash().name().c_str()];
-    this->pass_hash() = val.GetString();
+    auto& val_hash = j.value(this->pass_hash().name());
+    this->pass_hash() = val_hash.GetString();
 }
 
 auto register_request::to_json() const -> std::string {
