@@ -13,6 +13,8 @@ public:
 
     tcp_server(io_context_t& io_context, size_t port);
 
+    auto get_mes_handler() const -> std::shared_ptr<mes_handler>;
+
 private:
     void start_accept();
     void handle_accept(pointer_t new_connection, const ec_t& ec);

@@ -1,13 +1,11 @@
 #include "components/log.hpp"
-
+#include "db/database_worker.h"
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
 #include <csignal>
 #include <deque>
 #include <iostream>
 #include <string>
-#include <sqlpp11/sqlpp11.h>
-#include <sqlpp11/postgresql/connection.h>
 
 void my_signal_handler(int signum) {
     ::signal(signum, SIG_DFL);
@@ -49,6 +47,7 @@ auto main(int argc, char* argv[]) -> int {
     po::options_description desc("Allowed options");
     desc.add_options()("help", "this message");
     desc.add_options()("port", po::value<size_t>(), "accepting port for server");
+    desc.add_options()("db_config", po::value<std::string>(), "db json configuration file path");
     desc.add_options()("verbose", po::value<size_t>(),
                        "level of verbosity.\n"
                        "0 - trace\n"
@@ -79,16 +78,30 @@ auto main(int argc, char* argv[]) -> int {
         }
         lgr.set_level(static_cast<logger::level>(verb));
     }
+
     size_t port;
+    std::string db_conf_path;
     if (vm.count("port") > 0) {
         port = vm["port"].as<size_t>();
     } else {
         lgr.critical("'port' parameter is mandatory!");
         abort();
     }
+    if (vm.count("db_config") > 0) {
+        db_conf_path = vm["db_config"].as<std::string>();
+    } else {
+        lgr.critical("'db_config' parameter is mandatory!");
+        abort();
+    }
+
+    auto config = database_worker::read_cfg_from(db_conf_path);
+    auto db_wrkr = std::make_shared<database_worker>(config);
+    db_wrkr->connect();
 
     boost::asio::io_context io_context;
     tcp_server server(io_context, port);
+    auto mes_hdlr = server.get_mes_handler();
+    mes_hdlr->connect_db_worker(db_wrkr);
     io_context.run();
 
     return 0;

@@ -3,8 +3,8 @@
 #include "json_obj.h"
 #include "rapidjson/prettywriter.h"
 #include <codecvt>
-#include <string>
 #include <locale>
+#include <string>
 
 namespace api {
 

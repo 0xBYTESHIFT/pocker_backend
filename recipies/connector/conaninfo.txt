@@ -23,6 +23,9 @@
     compiler.version=11
     os=Linux
 
+# [imports]
+# lib, *.so -> ./lib # Copies all so files from packages lib folder to my "bin" folder
+
 [full_requires]
 
 [full_options]

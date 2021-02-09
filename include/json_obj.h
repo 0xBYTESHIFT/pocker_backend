@@ -223,7 +223,7 @@ auto json::value_as(const std::string& name, error_code& ec) const noexcept -> T
         ec.set_(error_code::code_t::value_empty, 0);
         return T();
     }
-    if constexpr(std::is_same_v<T, std::string>) {
+    if constexpr (std::is_same_v<T, std::string>) {
         if (!val.IsString()) {
             ec.set_(error_code::code_t::value_type, 0);
             return T();

@@ -19,10 +19,16 @@ find_program(TIDY "clang-tidy-11")
 # set(CMAKE_CXX_CLANG_TIDY "${CMAKE_CXX_CLANG_TIDY},portability-*")
 # set(CMAKE_CXX_CLANG_TIDY "${CMAKE_CXX_CLANG_TIDY},readability-*")
 
-include_directories(${CMAKE_CURRENT_LIST_DIR} components)
+if (NOT EXISTS "${CMAKE_BINARY_DIR}/conan.cmake")
+    message(STATUS "Downloading conan.cmake from https://github.com/conan-io/cmake-conan")
+    file(DOWNLOAD "https://raw.githubusercontent.com/conan-io/cmake-conan/v0.15/conan.cmake" "${CMAKE_BINARY_DIR}/conan.cmake")
+endif ()
+
+include(${CMAKE_BINARY_DIR}/conan.cmake)
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
 conan_basic_setup()
 
+include_directories(${CMAKE_CURRENT_LIST_DIR} components)
 add_subdirectory(client) 
 
 set(POKER_SRC
@@ -30,6 +36,7 @@ set(POKER_SRC
     src/net/tcp_server.cpp
     src/net/mes_handler.cpp
     src/api.cpp
+    src/db/database_worker.cpp
 )
 
 add_executable(poker main.cpp ${POKER_SRC})

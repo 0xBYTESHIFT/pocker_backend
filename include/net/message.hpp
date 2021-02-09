@@ -1,7 +1,7 @@
 #pragma once
+#include <codecvt>
 #include <cstring>
 #include <string>
-#include <codecvt>
 
 class message {
 public:
@@ -74,7 +74,7 @@ public:
     }
 
     auto operator=(const std::wstring& str) -> message& {
-        const auto len = str.length()*sizeof(wchar_t);
+        const auto len = str.length() * sizeof(wchar_t);
         body_length(len);
         encode_header();
         std::memcpy(data_ + header_length, str.data(), len);

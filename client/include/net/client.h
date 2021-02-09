@@ -2,9 +2,9 @@
 #include "net/message.hpp"
 #include <boost/asio.hpp>
 #include <boost/lockfree/spsc_queue.hpp>
+#include <chrono>
 #include <deque>
 #include <optional>
-#include <chrono>
 #include <readerwriterqueue/readerwriterqueue.h>
 
 using boost::asio::ip::tcp;
@@ -23,6 +23,7 @@ public:
     auto read_if_avail() -> std::optional<message>;
     auto read_wait() -> message;
     auto read_wait(std::chrono::milliseconds ms) -> std::optional<message>;
+
 private:
     void do_connect_(const tcp::resolver::results_type& endpoints);
     void do_read_header_();

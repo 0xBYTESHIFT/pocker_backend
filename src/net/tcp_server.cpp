@@ -1,7 +1,7 @@
 #include "net/tcp_server.h"
+#include "api.h"
 #include "components/log.hpp"
 #include <boost/bind.hpp>
-#include "api.h"
 
 tcp_server::tcp_server(io_context_t& io_context, size_t port)
     : io_context_(io_context)
@@ -36,4 +36,8 @@ void tcp_server::handle_accept(pointer_t new_connection, const ec_t& error) {
     }
 
     start_accept();
+}
+
+auto tcp_server::get_mes_handler() const -> std::shared_ptr<mes_handler> {
+    return this->handler_;
 }
