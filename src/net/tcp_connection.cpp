@@ -59,7 +59,7 @@ void tcp_connection::do_read_body_() {
         if (!ec) {
             auto mes = std::string_view(read_msg_.body(), read_msg_.body_length());
             lgr.debug("{} got message:{}", prefix, mes);
-            handler_->broadcast(read_msg_);
+            handler_->handle(read_msg_, self);
             do_read_header_();
         } else {
             lgr.error("{} recv error:{}", prefix, ec.message());

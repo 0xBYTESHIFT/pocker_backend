@@ -14,7 +14,7 @@ class Sqlpp11ConnectorPostgresConan(ConanFile):
     }
 
     default_options = {
-        "SHARED": True,
+        "SHARED": False,
     }
     generators = ("cmake", "virtualbuildenv", "virtualrunenv")
     build_policy = "missing"

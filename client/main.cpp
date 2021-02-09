@@ -1,17 +1,19 @@
+#include "api.h"
 #include "components/log.hpp"
+#include "net/client.h"
 #include "net/message.hpp"
 
+#include <boost/algorithm/hex.hpp>
+#include <boost/algorithm/string.hpp>
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
+#include <codecvt>
 #include <csignal>
 #include <iostream>
+#include <openssl/ssl3.h>
 
 #include <boost/array.hpp>
-#include <boost/asio.hpp>
 #include <iostream>
-#include <deque>
-
-using boost::asio::ip::tcp;
 
 void my_signal_handler(int signum) {
     ::signal(signum, SIG_DFL);
@@ -37,93 +39,6 @@ void terminate_handler() {
 }
 
 using boost::asio::ip::tcp;
-
-using message_queue = std::deque<message>;
-
-class client {
-public:
-    using io_context_t = boost::asio::io_context;
-
-    client(io_context_t& io_context,
-           const tcp::resolver::results_type& endpoints)
-        : io_context_(io_context)
-        , socket_(io_context) {
-        do_connect_(endpoints);
-    }
-
-    void write(const message& msg) {
-        auto lbd = [this, msg]() {
-            bool write_in_progress = !write_msgs_.empty();
-            write_msgs_.emplace_back(msg);
-            if (!write_in_progress) {
-                do_write_();
-            }
-        };
-        boost::asio::post(io_context_, lbd);
-    }
-
-    void close() {
-        boost::asio::post(io_context_, [this]() { socket_.close(); });
-    }
-
-private:
-    void do_connect_(const tcp::resolver::results_type& endpoints) {
-        auto lbd = [this](boost::system::error_code ec, tcp::endpoint) {
-            if (!ec) {
-                do_read_header_();
-            }
-        };
-        boost::asio::async_connect(socket_, endpoints, lbd);
-    }
-
-    void do_read_header_() {
-        auto buf = boost::asio::buffer(read_msg_.data(), message::header_length);
-        auto lbd = [this](boost::system::error_code ec, std::size_t /*length*/) {
-            if (!ec && read_msg_.decode_header()) {
-                do_read_body_();
-            } else {
-                socket_.close();
-            }
-        };
-        boost::asio::async_read(socket_, buf, lbd);
-    }
-
-    void do_read_body_() {
-        auto buf = boost::asio::buffer(read_msg_.body(), read_msg_.body_length());
-        auto lbd = [this](boost::system::error_code ec, std::size_t /*length*/) {
-            if (!ec) {
-                std::cout.write(read_msg_.body(), read_msg_.body_length());
-                std::cout << "\n";
-                do_read_header_();
-            } else {
-                socket_.close();
-            }
-        };
-        boost::asio::async_read(socket_, buf, lbd);
-    }
-
-    void do_write_() {
-        auto buf = boost::asio::buffer(write_msgs_.front().data(),
-                                       write_msgs_.front().length());
-        auto lbd = [this](boost::system::error_code ec, std::size_t /*length*/) {
-            if (!ec) {
-                write_msgs_.pop_front();
-                if (!write_msgs_.empty()) {
-                    do_write_();
-                }
-            } else {
-                socket_.close();
-            }
-        };
-        boost::asio::async_write(socket_, buf, lbd);
-    }
-
-private:
-    boost::asio::io_context& io_context_;
-    tcp::socket socket_;
-    message read_msg_;
-    message_queue write_msgs_;
-};
 
 int main(int argc, char* argv[]) {
     setup_handlers();
@@ -190,14 +105,46 @@ int main(int argc, char* argv[]) {
     client c(io_context, endpoints);
 
     std::thread t([&io_context]() { io_context.run(); });
+    {
+        message msg = c.read_wait();
+        std::string msg_str(msg.body(), msg.body_length());
+        std::cout << msg_str << std::endl;
+    }
 
-    char line[message::max_body_length + 1];
-    while (std::cin.getline(line, message::max_body_length + 1)) {
-        message msg;
-        msg.body_length(std::strlen(line));
-        std::memcpy(msg.body(), line, msg.body_length());
-        msg.encode_header();
-        c.write(msg);
+    std::wstring line;
+    while (std::getline(std::wcin, line)) {
+        if (line.find(L"/r") != std::wstring::npos) {
+            std::vector<std::wstring> words;
+            boost::split(words, line, boost::is_any_of("\t"));
+
+            api::register_request rq;
+            rq.first_name = words.at(1);
+            if (words.at(2) != L"null") {
+                rq.last_name = words.at(2);
+            }
+
+            auto& given_pass = words.at(3);
+            std::string pass_hash(SHA512_DIGEST_LENGTH, ' ');
+            std::cout << "doing sha512" << std::endl;
+            SHA512(reinterpret_cast<unsigned char*>(given_pass.data()),
+                   given_pass.size() * sizeof(wchar_t),
+                   reinterpret_cast<unsigned char*>(pass_hash.data()));
+            std::cout << "doing sha512 ended" << std::endl;
+
+            rq.pass_hash = boost::algorithm::hex(pass_hash);
+
+            auto json_str = rq.to_json();
+            std::cout << "json:" << json_str << std::endl;
+            message msg = json_str;
+            c.write(msg);
+            msg = c.read_wait();
+            std::string msg_str(msg.body(), msg.body_length());
+            std::cout << msg_str << std::endl;
+            std::cout << "read done" << std::endl;
+        } else {
+            message msg = line;
+            c.write(msg);
+        }
     }
 
     c.close();
