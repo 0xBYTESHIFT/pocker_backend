@@ -52,14 +52,6 @@ namespace api {
         w.String(str.c_str(), mes_size);
     }
 
-    template<class Writer>
-    void write_str(const std::wstring& wstr, Writer& w) {
-        auto mes_size = static_cast<rapidjson::SizeType>(wstr.length() * sizeof(wchar_t));
-        std::wstring_convert<std::codecvt_utf8<wchar_t>> myconv;
-        auto str = myconv.to_bytes(wstr);
-        w.String(reinterpret_cast<const char*>(str.c_str()), str.size());
-    }
-
     struct connect_response {
         static const inline prop_val<std::string> type{"type", "connect_response"};
         prop_val<size_t> code{"code", 0};
@@ -71,8 +63,8 @@ namespace api {
 
     struct register_request {
         static const inline prop_val<std::string> type{"type", "register_request"};
-        prop_val<std::wstring> first_name = {"first_name", L""};
-        prop_val<std::wstring> last_name = {"last_name", L""};
+        prop_val<std::string> nickname = {"nickname", ""};
+        prop_val<std::string> email = {"email", ""};
         prop_val<std::string> pass_hash = {"pass_hash", ""};
 
         void from_json(const std::string& json);
@@ -82,12 +74,13 @@ namespace api {
 
     struct register_response {
         static const inline prop_val<std::string> type{"type", "register_response"};
-        enum class code {
+        enum class code_enum {
             OK,
             NAME_TAKEN,
             ETC
         };
-        property<size_t> code = 0;
+        prop_val<code_enum> code = {"code", code_enum::OK};
+        prop_val<std::string> message = {"message", ""};
 
         void from_json(const std::string& jspn);
         void from_json(const json& j);
@@ -96,8 +89,8 @@ namespace api {
 
     struct login_request {
         static const inline prop_val<std::string> type{"type", "login_request"};
-        property<std::string> name = "";
-        property<std::string> pass_hash = "";
+        prop_val<std::string> email = {"email", ""};
+        prop_val<std::string> pass_hash = {"pass_hash", ""};
 
         void from_json(const std::string& json);
         void from_json(const json& j);
@@ -106,13 +99,14 @@ namespace api {
 
     struct login_response {
         static const inline prop_val<std::string> type{"type", "login_response"};
-        enum class code {
+        enum class code_enum {
             OK,
             NAME_UNKNOWN,
             PASS_INCORRECT,
             ETC
         };
-        property<code> code;
+        prop_val<code_enum> code = {"code", code_enum::OK};
+        prop_val<std::string> message = {"message", ""};
 
         void from_json(const std::string& json);
         void from_json(const json& j);

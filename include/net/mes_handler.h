@@ -1,5 +1,6 @@
 #pragma once
 #include "net/message.hpp"
+#include "json_obj.h"
 #include <memory>
 #include <set>
 
@@ -21,4 +22,7 @@ public:
 private:
     std::set<tcp_connection_ptr> participants_;
     std::shared_ptr<database_worker> db_wrkr_;
+
+    void handle_reg_request_(const json& j, tcp_connection_ptr sender);
+    void handle_login_request_(const json& j, tcp_connection_ptr sender);
 };

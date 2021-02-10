@@ -40,6 +40,38 @@ void terminate_handler() {
 
 using boost::asio::ip::tcp;
 
+static auto hash(const std::string& orig) -> std::string {
+    std::string result(SHA512_DIGEST_LENGTH, ' ');
+    SHA512(reinterpret_cast<const unsigned char*>(orig.data()), orig.size(),
+           reinterpret_cast<unsigned char*>(result.data()));
+    return boost::algorithm::hex(result);
+}
+
+void send_reg_request(client& c, const std::string& line) {
+    std::vector<std::string> words;
+    boost::split(words, line, boost::is_any_of("\t"));
+
+    api::register_request rq;
+    rq.nickname = words.at(1);
+    rq.email = words.at(2);
+    rq.pass_hash = hash(words.at(3));
+
+    message msg = rq.to_json();
+    c.write(msg);
+}
+
+void send_login_request(client& c, const std::string& line) {
+    std::vector<std::string> words;
+    boost::split(words, line, boost::is_any_of("\t"));
+
+    api::login_request rq;
+    rq.email = words.at(1);
+    rq.pass_hash = hash(words.at(2));
+
+    message msg = rq.to_json();
+    c.write(msg);
+}
+
 int main(int argc, char* argv[]) {
     setup_handlers();
     std::set_terminate(terminate_handler);
@@ -111,36 +143,18 @@ int main(int argc, char* argv[]) {
         std::cout << msg_str << std::endl;
     }
 
-    std::wstring line;
-    while (std::getline(std::wcin, line)) {
-        if (line.find(L"/r") != std::wstring::npos) {
-            std::vector<std::wstring> words;
-            boost::split(words, line, boost::is_any_of("\t"));
-
-            api::register_request rq;
-            rq.first_name = words.at(1);
-            if (words.at(2) != L"null") {
-                rq.last_name = words.at(2);
-            }
-
-            auto& given_pass = words.at(3);
-            std::string pass_hash(SHA512_DIGEST_LENGTH, ' ');
-            std::cout << "doing sha512" << std::endl;
-            SHA512(reinterpret_cast<unsigned char*>(given_pass.data()),
-                   given_pass.size() * sizeof(wchar_t),
-                   reinterpret_cast<unsigned char*>(pass_hash.data()));
-            std::cout << "doing sha512 ended" << std::endl;
-
-            rq.pass_hash = boost::algorithm::hex(pass_hash);
-
-            auto json_str = rq.to_json();
-            std::cout << "json:" << json_str << std::endl;
-            message msg = json_str;
-            c.write(msg);
-            msg = c.read_wait();
+    std::string line;
+    while (std::getline(std::cin, line)) {
+        if (line.find("/r") != std::string::npos) {
+            send_reg_request(c, line);
+            auto msg = c.read_wait();
             std::string msg_str(msg.body(), msg.body_length());
             std::cout << msg_str << std::endl;
-            std::cout << "read done" << std::endl;
+        } else if (line.find("/l") != std::string::npos) {
+            send_login_request(c, line);
+            auto msg = c.read_wait();
+            std::string msg_str(msg.body(), msg.body_length());
+            std::cout << msg_str << std::endl;
         } else {
             message msg = line;
             c.write(msg);

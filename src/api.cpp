@@ -6,6 +6,17 @@
 
 using namespace api;
 
+template<class Pw>
+void write_prop_val(Pw& pw, const prop_val<std::string>& val) {
+    api::write_str(val().name(), pw);
+    api::write_str(val(), pw);
+}
+template<class Pw>
+void write_prop_val(Pw& pw, const prop_val<size_t>& val) {
+    api::write_str(val().name(), pw);
+    pw.Int64(val().downcast());
+}
+
 void connect_response::from_json(const std::string& str) {
     rapidjson::Document d;
     d.Parse(str.c_str());
@@ -13,43 +24,29 @@ void connect_response::from_json(const std::string& str) {
     val = d[this->code().name().c_str()];
     this->code() = val.GetInt64();
 }
-
 auto connect_response::to_json() const -> std::string {
     std::string result;
     rapidjson::StringBuffer sb;
     rapidjson::PrettyWriter<decltype(sb)> pw(sb);
 
     pw.StartObject();
-    api::write_str(this->type().name(), pw);
-    api::write_str(this->type(), pw);
-
-    api::write_str(this->code().name(), pw);
-    pw.Int64(this->code());
+    write_prop_val(pw, this->type);
+    write_prop_val(pw, this->code);
     pw.EndObject();
 
     result = sb.GetString();
     return result;
 }
-
 void register_request::from_json(const std::string& json) {
     class json j = json;
     this->from_json(j);
 }
 
-#include <iostream>
+/*==============================================================*/
 void register_request::from_json(const json& j) {
-    {
-        auto c_str = j.value_as<std::string>(this->first_name().name());
-        this->first_name() = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(c_str);
-    }
-
-    {
-        auto c_str = j.value_as<std::string>(this->last_name().name());
-        this->last_name() = std::wstring_convert<std::codecvt_utf8<wchar_t>>().from_bytes(c_str);
-    }
-
-    auto& val_hash = j.value(this->pass_hash().name());
-    this->pass_hash() = val_hash.GetString();
+    this->nickname() = j.value_as<std::string>(this->nickname().name());
+    this->email() = j.value_as<std::string>(this->email().name());
+    this->pass_hash() = j.value_as<std::string>(this->pass_hash().name());
 }
 
 auto register_request::to_json() const -> std::string {
@@ -58,26 +55,88 @@ auto register_request::to_json() const -> std::string {
     rapidjson::PrettyWriter<decltype(sb)> pw(sb);
 
     pw.StartObject();
-    api::write_str(this->type().name(), pw);
-    api::write_str(this->type(), pw);
-
-    api::write_str(this->first_name().name(), pw);
-    api::write_str(this->first_name(), pw);
-
-    api::write_str(this->last_name().name(), pw);
-    api::write_str(this->last_name(), pw);
-
-    api::write_str(this->pass_hash().name(), pw);
-    api::write_str(this->pass_hash(), pw);
+    write_prop_val(pw, this->type);
+    write_prop_val(pw, this->email);
+    write_prop_val(pw, this->nickname);
+    write_prop_val(pw, this->pass_hash);
     pw.EndObject();
 
     result = sb.GetString();
     return result;
 }
 
+/*==============================================================*/
 void register_response::from_json(const std::string& json) {
+    class json j = json;
+    this->from_json(j);
+}
+void register_response::from_json(const json& j) {
+    this->message() = j.value_as<std::string>(this->message().name());
+    this->code() = (register_response::code_enum) j.value_as<std::size_t>(this->code().name());
 }
 auto register_response::to_json() const -> std::string {
     std::string result;
+    rapidjson::StringBuffer sb;
+    rapidjson::PrettyWriter<decltype(sb)> pw(sb);
+
+    pw.StartObject();
+    write_prop_val(pw, this->type);
+    write_prop_val(pw, this->message);
+
+    api::write_str(this->code().name(), pw);
+    pw.Int64(size_t(this->code().downcast()));
+    pw.EndObject();
+
+    result = sb.GetString();
+    return result;
+}
+
+/*==============================================================*/
+void login_request::from_json(const std::string& json) {
+    class json j = json;
+    this->from_json(j);
+}
+void login_request::from_json(const json& j) {
+    this->email() = j.value_as<std::string>(this->email().name());
+    this->pass_hash() = j.value_as<std::string>(this->pass_hash().name());
+}
+auto login_request::to_json() const -> std::string {
+    std::string result;
+    rapidjson::StringBuffer sb;
+    rapidjson::PrettyWriter<decltype(sb)> pw(sb);
+
+    pw.StartObject();
+    write_prop_val(pw, this->type);
+    write_prop_val(pw, this->email);
+    write_prop_val(pw, this->pass_hash);
+    pw.EndObject();
+
+    result = sb.GetString();
+    return result;
+}
+
+/*==============================================================*/
+void login_response::from_json(const std::string& json) {
+    class json j = json;
+    this->from_json(j);
+}
+void login_response::from_json(const json& j) {
+    this->code() = (login_response::code_enum) j.value_as<std::size_t>(this->code().name());
+    this->message() = j.value_as<std::string>(this->message().name());
+}
+auto login_response::to_json() const -> std::string {
+    std::string result;
+    rapidjson::StringBuffer sb;
+    rapidjson::PrettyWriter<decltype(sb)> pw(sb);
+
+    pw.StartObject();
+    write_prop_val(pw, this->type);
+    write_prop_val(pw, this->message);
+
+    api::write_str(this->code().name(), pw);
+    pw.Int64(size_t(this->code().downcast()));
+    pw.EndObject();
+
+    result = sb.GetString();
     return result;
 }

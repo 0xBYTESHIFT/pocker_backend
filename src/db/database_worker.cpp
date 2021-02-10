@@ -21,6 +21,9 @@ void database_worker::connect() {
 auto database_worker::db() -> connection_ptr& {
     return this->db_connection_;
 }
+auto database_worker::config() const -> const db_connect_config& {
+    return this->config_;
+}
 
 auto database_worker::read_cfg_from(const std::string& json_path) -> db_connect_config {
     db_connect_config result;
@@ -35,11 +38,11 @@ auto database_worker::read_cfg_from(const std::string& json_path) -> db_connect_
     content.assign((std::istreambuf_iterator<char>(ifs)),
                    std::istreambuf_iterator<char>());
 
-    std::cout << "json:" << content << std::endl;
     j.parse(std::move(content));
     result.db_host = j.value_as<std::string>("db_host");
     result.db_name = j.value_as<std::string>("db_name");
     result.db_user = j.value_as<std::string>("db_user");
     result.db_pass = j.value_as<std::string>("db_pass");
+    result.db_pass_salt = j.value_as<std::string>("db_pass_salt");
     return result;
 }

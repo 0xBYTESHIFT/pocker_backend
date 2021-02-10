@@ -78,6 +78,8 @@ auto main(int argc, char* argv[]) -> int {
         }
         lgr.set_level(static_cast<logger::level>(verb));
     }
+    lgr.info("info test");
+    lgr.debug("debug test");
 
     size_t port;
     std::string db_conf_path;
