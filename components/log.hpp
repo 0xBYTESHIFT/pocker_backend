@@ -1,5 +1,6 @@
 #pragma once
 
+#include "tracy_include.h"
 #include <boost/process/environment.hpp>
 #include <chrono>
 #include <iostream>
@@ -40,66 +41,79 @@ public:
 
     template<typename MSGBuilder>
     auto log(MSGBuilder&& msg_builder) noexcept -> void {
+        ZoneScoped;
         logger_->log(static_cast<spdlog::level::level_enum>(lvl_), std::forward<MSGBuilder>(msg_builder));
     }
 
     template<typename MSGBuilder>
     auto trace(MSGBuilder&& msg_builder) noexcept -> void {
+        ZoneScoped;
         logger_->trace(std::forward<MSGBuilder>(msg_builder));
     }
 
     template<typename MSGBuilder>
     auto info(MSGBuilder&& msg_builder) noexcept -> void {
+        ZoneScoped;
         logger_->info(std::forward<MSGBuilder>(msg_builder));
     }
 
     template<typename MSGBuilder>
     auto warn(MSGBuilder&& msg_builder) noexcept -> void {
+        ZoneScoped;
         logger_->warn(std::forward<MSGBuilder>(msg_builder));
     }
 
     template<typename MSGBuilder>
     auto error(MSGBuilder&& msg_builder) noexcept -> void {
+        ZoneScoped;
         logger_->error(std::forward<MSGBuilder>(msg_builder));
     }
 
     template<typename MSGBuilder>
     auto debug(MSGBuilder&& msg_builder) noexcept -> void {
+        ZoneScoped;
         logger_->debug(std::forward<MSGBuilder>(msg_builder));
     }
 
     template<typename MSGBuilder>
     auto critical(MSGBuilder&& msg_builder) noexcept -> void {
+        ZoneScoped;
         logger_->critical(std::forward<MSGBuilder>(msg_builder));
     }
 
     template<typename S, typename... Args>
     auto trace(const S& format_str, Args&&... args) -> void {
+        ZoneScoped;
         logger_->trace(fmt::format(format_str, std::forward<Args>(args)...));
     }
 
     template<typename S, typename... Args>
     auto info(const S& format_str, Args&&... args) -> void {
+        ZoneScoped;
         logger_->info(fmt::format(format_str, std::forward<Args>(args)...));
     }
 
     template<typename S, typename... Args>
     auto debug(const S& format_str, Args&&... args) -> void {
+        ZoneScoped;
         logger_->debug(fmt::format(format_str, std::forward<Args>(args)...));
     }
 
     template<typename S, typename... Args>
     auto warn(const S& format_str, Args&&... args) -> void {
+        ZoneScoped;
         logger_->warn(fmt::format(format_str, std::forward<Args>(args)...));
     }
 
     template<typename S, typename... Args>
     auto error(const S& format_str, Args&&... args) -> void {
+        ZoneScoped;
         logger_->error(fmt::format(format_str, std::forward<Args>(args)...));
     }
 
     template<typename S, typename... Args>
     auto critical(const S& format_str, Args&&... args) -> void {
+        ZoneScoped;
         logger_->critical(fmt::format(format_str, std::forward<Args>(args)...));
     }
 
@@ -144,6 +158,7 @@ inline auto logger::get_internal_logger() -> std::shared_ptr<spdlog::logger> {
 }
 
 inline auto initialization_logger(const std::string& prefix) -> logger {
+    ZoneScoped;
     //prefix == "logs/", no need for slash here
     auto name = fmt::format(prefix + "{0}.txt", boost::this_process::get_id());
     ///spdlog::init_thread_pool(8192, 1);
@@ -159,13 +174,16 @@ inline auto initialization_logger(const std::string& prefix) -> logger {
 }
 
 inline auto get_logger(const std::string& name) -> logger {
+    ZoneScoped;
     return spdlog::get(name);
 }
 
 inline auto get_logger() -> logger {
+    ZoneScoped;
     return spdlog::get("default");
 }
 
 inline auto initialization_logger(std::shared_ptr<spdlog::logger> logger) -> void {
+    ZoneScoped;
     spdlog::register_logger(std::move(logger));
 }

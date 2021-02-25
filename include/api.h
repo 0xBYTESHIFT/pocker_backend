@@ -2,6 +2,7 @@
 #include "components/property.hpp"
 #include "json_obj.h"
 #include "rapidjson/prettywriter.h"
+#include "tracy_include.h"
 #include <codecvt>
 #include <locale>
 #include <string>

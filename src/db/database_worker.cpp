@@ -1,10 +1,12 @@
 #include "db/database_worker.h"
 #include "db/table_user.hpp"
 #include "json_obj.h"
+#include "tracy_include.h"
 #include <fstream>
 #include <string>
 
 database_worker::database_worker(const db_connect_config& config) {
+    ZoneScoped;
     this->config_ = config;
     this->sqlpp_config_ = std::make_shared<sqlpp::postgresql::connection_config>();
     sqlpp_config_->host = config_.db_host;
@@ -12,20 +14,26 @@ database_worker::database_worker(const db_connect_config& config) {
     sqlpp_config_->password = config_.db_pass;
     sqlpp_config_->dbname = config_.db_name;
 }
-database_worker::~database_worker() {}
+database_worker::~database_worker() {
+    ZoneScoped;
+}
 
 void database_worker::connect() {
+    ZoneScoped;
     this->db_connection_ = std::make_unique<sqlpp::postgresql::connection>(sqlpp_config_);
 }
 
 auto database_worker::db() -> connection_ptr& {
+    ZoneScoped;
     return this->db_connection_;
 }
 auto database_worker::config() const -> const db_connect_config& {
+    ZoneScoped;
     return this->config_;
 }
 
 auto database_worker::read_cfg_from(const std::string& json_path) -> db_connect_config {
+    ZoneScoped;
     db_connect_config result;
     json j;
     std::ifstream ifs(json_path);

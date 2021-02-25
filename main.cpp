@@ -1,5 +1,7 @@
 #include "components/log.hpp"
 #include "db/database_worker.h"
+#include "server.h"
+#include "tracy_include.h"
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
 #include <csignal>
@@ -8,6 +10,7 @@
 #include <string>
 
 void my_signal_handler(int signum) {
+    ZoneScoped;
     ::signal(signum, SIG_DFL);
     std::cerr << "signal called:" << std::endl
               << boost::stacktrace::stacktrace() << std::endl;
@@ -16,6 +19,7 @@ void my_signal_handler(int signum) {
 }
 
 void setup_handlers() {
+    ZoneScoped;
     ::signal(SIGSEGV, &my_signal_handler);
     ::signal(SIGABRT, &my_signal_handler);
 }
@@ -23,6 +27,7 @@ void setup_handlers() {
 static auto original_terminate_handler{std::get_terminate()};
 
 void terminate_handler() {
+    ZoneScoped;
     std::cerr << "terminate called:" << std::endl
               << boost::stacktrace::stacktrace() << std::endl;
     std::cerr << "errno:" << ::strerror(errno) << std::endl;
@@ -34,6 +39,7 @@ void terminate_handler() {
 #include "net/tcp_server.h"
 
 auto main(int argc, char* argv[]) -> int {
+    ZoneScoped;
     setup_handlers();
     std::set_terminate(terminate_handler);
 
@@ -103,7 +109,9 @@ auto main(int argc, char* argv[]) -> int {
     boost::asio::io_context io_context;
     tcp_server server(io_context, port);
     auto mes_hdlr = server.get_mes_handler();
+    auto srv = std::make_shared<class server>();
     mes_hdlr->connect_db_worker(db_wrkr);
+    mes_hdlr->set_server(srv);
     io_context.run();
 
     return 0;

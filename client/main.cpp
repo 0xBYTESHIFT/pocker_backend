@@ -49,7 +49,7 @@ static auto hash(const std::string& orig) -> std::string {
 
 void send_reg_request(client& c, const std::string& line) {
     std::vector<std::string> words;
-    boost::split(words, line, boost::is_any_of("\t"));
+    boost::split(words, line, boost::is_any_of("\t;"));
 
     api::register_request rq;
     rq.nickname = words.at(1);
@@ -62,7 +62,7 @@ void send_reg_request(client& c, const std::string& line) {
 
 void send_login_request(client& c, const std::string& line) {
     std::vector<std::string> words;
-    boost::split(words, line, boost::is_any_of("\t"));
+    boost::split(words, line, boost::is_any_of("\t;"));
 
     api::login_request rq;
     rq.email = words.at(1);

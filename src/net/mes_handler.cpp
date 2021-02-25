@@ -5,28 +5,48 @@
 #include "json_obj.h"
 #include "log.hpp"
 #include "net/tcp_connection.h"
+#include "server.h"
+#include "tracy_include.h"
+#include "user.h"
 #include <boost/algorithm/hex.hpp>
 #include <iostream>
 #include <openssl/ssl3.h>
 
 static auto hash(const std::string& orig) -> std::string {
+    ZoneScoped;
     std::string result(SHA512_DIGEST_LENGTH, ' ');
     SHA512(reinterpret_cast<const unsigned char*>(orig.data()), orig.size(),
            reinterpret_cast<unsigned char*>(result.data()));
     return boost::algorithm::hex(result);
 }
 
-void mes_handler::add(tcp_connection_ptr conn) {
+void mes_handler::add_connection(const tcp_connection_ptr& conn) {
+    ZoneScoped;
     participants_.insert(conn);
     conn->add_handler(shared_from_this());
     conn->start();
 }
 
-void mes_handler::del(tcp_connection_ptr conn) {
+void mes_handler::del_connection(const tcp_connection_ptr& conn) {
+    ZoneScoped;
     participants_.erase(conn);
 }
 
+void mes_handler::set_server(const server_ptr& srv) {
+    ZoneScoped;
+    this->srv_ = srv;
+}
+auto mes_handler::get_server() const -> const server_ptr& {
+    ZoneScoped;
+    return this->srv_;
+}
+auto mes_handler::get_server() -> server_ptr& {
+    ZoneScoped;
+    return this->srv_;
+}
+
 void mes_handler::handle(const message& msg, tcp_connection_ptr sender) {
+    ZoneScoped;
     auto lgr = get_logger();
     auto prefix = "mes_handler::handle";
     std::string str(msg.body(), msg.body_length());
@@ -42,11 +62,13 @@ void mes_handler::handle(const message& msg, tcp_connection_ptr sender) {
     }
 }
 
-void mes_handler::connect_db_worker(std::shared_ptr<database_worker> wrkr) {
-    this->db_wrkr_ = std::move(wrkr);
+void mes_handler::connect_db_worker(const database_worker_ptr& wrkr) {
+    ZoneScoped;
+    this->db_wrkr_ = wrkr;
 }
 
 void mes_handler::handle_reg_request_(const json& j, tcp_connection_ptr sender) {
+    ZoneScoped;
     auto lgr = get_logger();
     auto prefix = "mes_handler::handle_reg_request_";
 
@@ -92,6 +114,7 @@ void mes_handler::handle_reg_request_(const json& j, tcp_connection_ptr sender) 
 }
 
 void mes_handler::handle_login_request_(const json& j, tcp_connection_ptr sender) {
+    ZoneScoped;
     auto lgr = get_logger();
     auto prefix = "mes_handler::handle_login_request_";
     api::login_request req;
@@ -102,7 +125,7 @@ void mes_handler::handle_login_request_(const json& j, tcp_connection_ptr sender
     auto& req_email = req.email().downcast();
     auto req_pass = hash(req.pass_hash().downcast() + db_wrkr_->config().db_pass_salt);
     auto& db = *db_ptr;
-    auto results = db(select(table.email, table.pass_hash)
+    auto results = db(select(table.user_id, table.nickname, table.email, table.pass_hash)
                           .from(table)
                           .where(table.email == req_email));
     lgr.debug("{} got login request, email:{} pass:{}", prefix, req_email, req_pass);
@@ -120,6 +143,11 @@ void mes_handler::handle_login_request_(const json& j, tcp_connection_ptr sender
                 rsp.message = "login success";
                 lgr.debug("{} email {} successfuly logined in", prefix, req_email);
                 status = true;
+
+                auto user = std::make_shared<class user>(row.user_id, sender);
+                user->email = row.email;
+                user->nickname = row.nickname;
+                this->srv_->add_user(user);
                 break;
             }
         }
