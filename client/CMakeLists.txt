@@ -21,23 +21,11 @@ find_program(TIDY "clang-tidy-11")
 
 include_directories(${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/../include
-    ${CMAKE_CURRENT_LIST_DIR}/include
     )
-include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup()
 
-set(POKER_SRC
-#src/net/tcp_connection.cpp
-#src/net/tcp_server.cpp
-)
-
-add_executable(poker-cli main.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/src/net/client.cpp
-    ${CMAKE_CURRENT_LIST_DIR}/../src/api.cpp
-    ${POKER_SRC}
-)
+add_executable(poker-cli main.cpp)
 #target_include_directories(poker-cli PRIVATE include)
-target_link_libraries(poker-cli ${CONAN_LIBS})
+target_link_libraries(poker-cli ${CONAN_LIBS} client api)
 target_compile_options(poker-cli PRIVATE -Wall -Wextra)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")

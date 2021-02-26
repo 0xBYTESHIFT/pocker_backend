@@ -1,6 +1,6 @@
 #pragma once
 
-#ifndef TRACY_ENABLE
+#if TRACY_ENABLE == 0
 
 #define ZoneScoped
 #define TracySecureAlloc(ptr, count)

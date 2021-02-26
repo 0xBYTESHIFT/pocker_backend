@@ -113,4 +113,30 @@ namespace api {
         void from_json(const json& j);
         auto to_json() const -> std::string;
     };
+
+    struct unregister_request {
+        static const inline prop_val<std::string> type{"type", "unregister_request"};
+        prop_val<std::string> email = {"email", ""};
+        prop_val<std::string> pass_hash = {"pass_hash", ""};
+
+        void from_json(const std::string& json);
+        void from_json(const json& j);
+        auto to_json() const -> std::string;
+    };
+
+    struct unregister_response {
+        static const inline prop_val<std::string> type{"type", "unregister_response"};
+        enum class code_enum {
+            OK,
+            NO_NAME,
+            NO_PASS,
+            ETC
+        };
+        prop_val<code_enum> code = {"code", code_enum::OK};
+        prop_val<std::string> message = {"message", ""};
+
+        void from_json(const std::string& jspn);
+        void from_json(const json& j);
+        auto to_json() const -> std::string;
+    };
 }; // namespace api

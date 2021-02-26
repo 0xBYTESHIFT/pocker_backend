@@ -1,6 +1,6 @@
 #include "components/api/api.h"
-#include "components/log.hpp"
 #include "components/client/client.h"
+#include "components/log.hpp"
 #include "net/message.hpp"
 
 #include <boost/algorithm/hex.hpp>
@@ -72,6 +72,101 @@ void send_login_request(client& c, const std::string& line) {
     c.write(msg);
 }
 
+void try_register(client& c) {
+    auto lgr = get_logger();
+    auto prefix = "try_register";
+
+    message msg;
+    api::register_request reg_req;
+    reg_req.email = "some_test_email@mail.domain";
+    reg_req.nickname = "nick";
+    reg_req.pass_hash = hash("some_test_hash");
+    msg = reg_req.to_json();
+    c.write(msg);
+
+    msg = c.read_wait();
+    std::string msg_str(msg.body(), msg.body_length());
+    lgr.info("{} got mes:{}", prefix, msg_str);
+
+    json j;
+    j.parse(msg_str);
+    if (j.value_as<std::string>("type") ==
+        api::register_response::type().downcast()) {
+        api::register_response resp;
+        resp.from_json(j);
+        if (resp.code() != api::register_response::code_enum::OK) {
+            auto mes = fmt::format("{} code is not ok during first register");
+            throw std::runtime_error(mes);
+        }
+    } else {
+        lgr.critical("{} got something that is not a register response", prefix);
+        abort();
+    }
+}
+
+void try_re_register(client& c) {
+    auto lgr = get_logger();
+    auto prefix = "try_re_register";
+
+    message msg;
+    api::register_request reg_req;
+    reg_req.email = "some_test_email@mail.domain";
+    reg_req.nickname = "nick";
+    reg_req.pass_hash = hash("some_test_hash");
+    msg = reg_req.to_json();
+    c.write(msg);
+
+    msg = c.read_wait();
+    std::string msg_str(msg.body(), msg.body_length());
+    lgr.info("{} got mes:{}", prefix, msg_str);
+
+    json j;
+    j.parse(msg_str);
+    if (j.value_as<std::string>("type") ==
+        api::register_response::type().downcast()) {
+        api::register_response resp;
+        resp.from_json(j);
+        if (resp.code() != api::register_response::code_enum::NAME_TAKEN) {
+            auto mes = fmt::format("{} code is name_taken during second register");
+            throw std::runtime_error(mes);
+        }
+    } else {
+        lgr.critical("{} got something that is not a register response", prefix);
+        abort();
+    }
+}
+
+void try_un_register(client& c) {
+    auto lgr = get_logger();
+    auto prefix = "try_un_register";
+
+    message msg;
+    api::unregister_request unreg_req;
+    unreg_req.email = "some_test_email@mail.domain";
+    unreg_req.pass_hash = hash("some_test_hash");
+    msg = unreg_req.to_json();
+    c.write(msg);
+
+    //get delete register response
+    msg = c.read_wait();
+    std::string msg_str(msg.body(), msg.body_length());
+    lgr.info("{} got mes:{}", prefix, msg_str);
+    json j;
+    j.parse(msg_str);
+    if (j.value_as<std::string>("type") ==
+        api::unregister_response::type().downcast()) {
+        api::unregister_response resp;
+        resp.from_json(j);
+        if (resp.code() != api::unregister_response::code_enum::OK) {
+            auto mes = fmt::format("{} wrong code on unreq request:{}", prefix, (int) resp.code().downcast());
+            throw std::runtime_error(mes);
+        }
+    } else {
+        lgr.critical("{} got something that is not an unregister response", prefix);
+        abort();
+    }
+}
+
 int main(int argc, char* argv[]) {
     setup_handlers();
     std::set_terminate(terminate_handler);
@@ -137,29 +232,11 @@ int main(int argc, char* argv[]) {
     client c(io_context, endpoints);
 
     std::thread t([&io_context]() { io_context.run(); });
-    {
-        message msg = c.read_wait();
-        std::string msg_str(msg.body(), msg.body_length());
-        std::cout << msg_str << std::endl;
-    }
 
-    std::string line;
-    while (std::getline(std::cin, line)) {
-        if (line.find("/r") != std::string::npos) {
-            send_reg_request(c, line);
-            auto msg = c.read_wait();
-            std::string msg_str(msg.body(), msg.body_length());
-            std::cout << msg_str << std::endl;
-        } else if (line.find("/l") != std::string::npos) {
-            send_login_request(c, line);
-            auto msg = c.read_wait();
-            std::string msg_str(msg.body(), msg.body_length());
-            std::cout << msg_str << std::endl;
-        } else {
-            message msg = line;
-            c.write(msg);
-        }
-    }
+    c.read_wait();//skip connection response
+    try_register(c);
+    try_re_register(c);
+    try_un_register(c);
 
     c.close();
     t.join();

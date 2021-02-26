@@ -50,26 +50,36 @@ set(POKER_SRC
     src/net/tcp_connection.cpp
     src/net/tcp_server.cpp
     src/net/mes_handler.cpp
-    src/api.cpp
     src/db/database_worker.cpp
     src/server.cpp
     src/user.cpp
 )
 
 if(USE_TRACY)
-        set(POKER_SRC ${POKER_SRC}
-                ${CMAKE_CURRENT_SOURCE_DIR}/tracy/TracyClient.cpp
-                )
+    get_filename_component(TRACY_PATH "${CMAKE_CURRENT_LIST_DIR}/tracy" ABSOLUTE)
+    set(POKER_SRC ${POKER_SRC}
+            ${TRACY_PATH}/TracyClient.cpp
+            )
 endif()
 
 add_executable(poker main.cpp ${POKER_SRC})
 target_include_directories(poker PRIVATE include)
-target_link_libraries(poker ${CONAN_LIBS})
+target_link_libraries(poker ${CONAN_LIBS} api)
 target_compile_options(poker PRIVATE -Wall -Wextra)
 
 if(USE_TRACY)
     target_compile_definitions(${PROJECT_NAME} PRIVATE TRACY_ENABLE=1)
+else()
+    target_compile_definitions(${PROJECT_NAME} PRIVATE TRACY_ENABLE=0)
 endif()
+
+get_filename_component(PROJECT_ROOT_PATH "${CMAKE_CURRENT_LIST_DIR}/" ABSOLUTE)
+get_filename_component(POKER_INCLUDE_PATH "${CMAKE_CURRENT_LIST_DIR}/include" ABSOLUTE)
+get_filename_component(POKER_CLI_INCLUDE_PATH "${CMAKE_CURRENT_LIST_DIR}/client/include" ABSOLUTE)
+
+add_subdirectory(components/client)
+add_subdirectory(components/api)
+add_subdirectory(tests)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -rdynamic")
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})

@@ -1,4 +1,4 @@
-#include "include/api.h"
+#include "api.h"
 #include "rapidjson/document.h"
 #include "rapidjson/prettywriter.h"
 #include "tracy_include.h"
@@ -20,6 +20,7 @@ void write_prop_val(Pw& pw, const prop_val<size_t>& val) {
     pw.Int64(val().downcast());
 }
 
+/*==============================================================*/
 void connect_response::from_json(const std::string& str) {
     ZoneScoped;
     rapidjson::Document d;
@@ -42,13 +43,14 @@ auto connect_response::to_json() const -> std::string {
     result = sb.GetString();
     return result;
 }
+
+/*==============================================================*/
 void register_request::from_json(const std::string& json) {
     ZoneScoped;
     class json j = json;
     this->from_json(j);
 }
 
-/*==============================================================*/
 void register_request::from_json(const json& j) {
     ZoneScoped;
     this->nickname() = j.value_as<std::string>(this->nickname().name());
@@ -141,6 +143,64 @@ void login_response::from_json(const json& j) {
     this->message() = j.value_as<std::string>(this->message().name());
 }
 auto login_response::to_json() const -> std::string {
+    ZoneScoped;
+    std::string result;
+    rapidjson::StringBuffer sb;
+    rapidjson::PrettyWriter<decltype(sb)> pw(sb);
+
+    pw.StartObject();
+    write_prop_val(pw, this->type);
+    write_prop_val(pw, this->message);
+
+    api::write_str(this->code().name(), pw);
+    pw.Int64(size_t(this->code().downcast()));
+    pw.EndObject();
+
+    result = sb.GetString();
+    return result;
+}
+
+/*==============================================================*/
+void unregister_request::from_json(const std::string& json) {
+    ZoneScoped;
+    class json j = json;
+    this->from_json(j);
+}
+
+void unregister_request::from_json(const json& j) {
+    ZoneScoped;
+    this->email() = j.value_as<std::string>(this->email().name());
+    this->pass_hash() = j.value_as<std::string>(this->pass_hash().name());
+}
+
+auto unregister_request::to_json() const -> std::string {
+    ZoneScoped;
+    std::string result;
+    rapidjson::StringBuffer sb;
+    rapidjson::PrettyWriter<decltype(sb)> pw(sb);
+
+    pw.StartObject();
+    write_prop_val(pw, this->type);
+    write_prop_val(pw, this->email);
+    write_prop_val(pw, this->pass_hash);
+    pw.EndObject();
+
+    result = sb.GetString();
+    return result;
+}
+
+/*==============================================================*/
+void unregister_response::from_json(const std::string& json) {
+    ZoneScoped;
+    class json j = json;
+    this->from_json(j);
+}
+void unregister_response::from_json(const json& j) {
+    ZoneScoped;
+    this->message() = j.value_as<std::string>(this->message().name());
+    this->code() = (unregister_response::code_enum) j.value_as<std::size_t>(this->code().name());
+}
+auto unregister_response::to_json() const -> std::string {
     ZoneScoped;
     std::string result;
     rapidjson::StringBuffer sb;

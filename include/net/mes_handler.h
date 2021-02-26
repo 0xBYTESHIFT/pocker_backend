@@ -33,5 +33,6 @@ private:
     server_ptr srv_;
 
     void handle_reg_request_(const json& j, tcp_connection_ptr sender);
+    void handle_unreg_request_(const json& j, tcp_connection_ptr sender);
     void handle_login_request_(const json& j, tcp_connection_ptr sender);
 };
