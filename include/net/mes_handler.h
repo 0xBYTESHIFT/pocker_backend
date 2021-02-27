@@ -1,9 +1,9 @@
 #pragma once
 #include "json_obj.h"
 #include "net/message.hpp"
+#include <boost/algorithm/hex.hpp>
 #include <memory>
 #include <openssl/ssl3.h>
-#include <boost/algorithm/hex.hpp>
 #include <set>
 
 class database_worker;

@@ -2,6 +2,7 @@
 #include "log.hpp"
 #include "tracy_include.h"
 #include "user.h"
+#include "game.h"
 
 void server::add_user(const user_ptr& user) {
     ZoneScoped;
@@ -57,4 +58,16 @@ auto server::users() const -> const user_cont& {
 auto server::users() -> user_cont& {
     ZoneScoped;
     return this->users_;
+}
+
+auto server::add_game() -> game_ptr{
+    auto game = std::make_shared<class game>();
+    this->games_.emplace_back(game);
+    return game;
+}
+auto server::games() const -> const game_cont&{
+    return this->games_;
+}
+auto server::games() -> game_cont&{
+    return this->games_;
 }
