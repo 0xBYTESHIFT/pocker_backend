@@ -1,19 +1,17 @@
 #include "components/api/api.h"
-#include "components/log.hpp"
 #include "components/client/client.h"
+#include "components/log.hpp"
 #include "net/message.hpp"
 
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/array.hpp>
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
 #include <codecvt>
 #include <csignal>
 #include <iostream>
 #include <openssl/ssl3.h>
-
-#include <boost/array.hpp>
-#include <iostream>
 
 void my_signal_handler(int signum) {
     ::signal(signum, SIG_DFL);

@@ -2,6 +2,8 @@
 #include "json_obj.h"
 #include "net/message.hpp"
 #include <memory>
+#include <openssl/ssl3.h>
+#include <boost/algorithm/hex.hpp>
 #include <set>
 
 class database_worker;
@@ -35,4 +37,12 @@ private:
     void handle_reg_request_(const json& j, tcp_connection_ptr sender);
     void handle_unreg_request_(const json& j, tcp_connection_ptr sender);
     void handle_login_request_(const json& j, tcp_connection_ptr sender);
+
+    auto hash_(const std::string& orig) -> std::string {
+        ZoneScoped;
+        std::string result(SHA512_DIGEST_LENGTH, ' ');
+        SHA512(reinterpret_cast<const unsigned char*>(orig.data()), orig.size(),
+               reinterpret_cast<unsigned char*>(result.data()));
+        return boost::algorithm::hex(result);
+    }
 };

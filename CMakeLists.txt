@@ -49,7 +49,10 @@ add_subdirectory(client)
 set(POKER_SRC
     src/net/tcp_connection.cpp
     src/net/tcp_server.cpp
-    src/net/mes_handler.cpp
+    src/net/mes_handler/mes_handler.cpp
+    src/net/mes_handler/mes_handler-login.cpp
+    src/net/mes_handler/mes_handler-register.cpp
+    src/net/mes_handler/mes_handler-unregister.cpp
     src/db/database_worker.cpp
     src/server.cpp
     src/user.cpp
