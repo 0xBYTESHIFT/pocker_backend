@@ -1,0 +1,7 @@
+{
+	"db_host": "localhost",
+	"db_name": "test_poker_db",
+	"db_user": "db_user",
+	"db_pass": "password",
+	"db_pass_salt": "some salt"
+}

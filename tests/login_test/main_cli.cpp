@@ -5,15 +5,12 @@
 
 #include <boost/algorithm/hex.hpp>
 #include <boost/algorithm/string.hpp>
+#include <boost/array.hpp>
 #include <boost/program_options.hpp>
 #include <boost/stacktrace.hpp>
-#include <codecvt>
 #include <csignal>
 #include <iostream>
 #include <openssl/ssl3.h>
-
-#include <boost/array.hpp>
-#include <iostream>
 
 void my_signal_handler(int signum) {
     ::signal(signum, SIG_DFL);
@@ -69,7 +66,7 @@ void try_register(client& c) {
         api::register_response resp;
         resp.from_json(j);
         if (resp.code() != api::register_response::code_enum::OK) {
-            auto mes = fmt::format("{} code is not ok during register, code:{}", prefix, (int) resp.code().downcast());
+            auto mes = fmt::format("{} code is not ok during first register, code:{}", prefix, (int) resp.code().downcast());
             throw std::runtime_error(mes);
         }
     } else {
@@ -78,16 +75,15 @@ void try_register(client& c) {
     }
 }
 
-void try_re_register(client& c) {
+void try_login(client& c) {
     auto lgr = get_logger();
-    auto prefix = "try_re_register";
+    auto prefix = "try_login";
 
     message msg;
-    api::register_request reg_req;
-    reg_req.email = "some_test_email@mail.domain";
-    reg_req.nickname = "nick";
-    reg_req.pass_hash = hash("some_test_hash");
-    msg = reg_req.to_json();
+    api::login_request log_req;
+    log_req.email = "some_test_email@mail.domain";
+    log_req.pass_hash = hash("some_test_hash");
+    msg = log_req.to_json();
     c.write(msg);
 
     msg = c.read_wait();
@@ -96,15 +92,15 @@ void try_re_register(client& c) {
 
     json j(msg_str);
     if (j.value_as<std::string>("type") ==
-        api::register_response::type().downcast()) {
-        api::register_response resp;
+        api::login_response::type().downcast()) {
+        api::login_response resp;
         resp.from_json(j);
-        if (resp.code() != api::register_response::code_enum::NAME_TAKEN) {
-            auto mes = fmt::format("{} code is not name_taken during second register", prefix, (int) resp.code().downcast());
+        if (resp.code() != api::login_response::code_enum::OK) {
+            auto mes = fmt::format("{} code is not OK during login request, code:{}", prefix, (int) resp.code().downcast());
             throw std::runtime_error(mes);
         }
     } else {
-        lgr.critical("{} got something that is not a register response", prefix);
+        lgr.critical("{} got something that is not a login response", prefix);
         abort();
     }
 }
@@ -207,7 +203,7 @@ int main(int argc, char* argv[]) {
 
     c.read_wait(); //skip connection response
     try_register(c);
-    try_re_register(c);
+    try_login(c);
     try_un_register(c);
 
     c.close();

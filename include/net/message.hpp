@@ -97,6 +97,10 @@ public:
         return *this;
     }
 
+    operator std::string() const {
+        std::string str(body(), body_length());
+        return str;
+    }
 private:
     char data_[header_length + max_body_length];
     std::size_t body_length_ = 0;

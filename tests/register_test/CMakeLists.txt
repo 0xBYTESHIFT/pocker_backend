@@ -8,5 +8,4 @@ endif()
 
 add_executable(register_test main_cli.cpp)
 target_link_libraries(register_test  ${CONAN_LIBS} client api)
-
 target_compile_definitions(register_test PRIVATE TRACY_ENABLE=0)
